@@ -145,7 +145,7 @@ axis(1,
 
 if __name__ == '__main__':
     import queue, db
-    with closing(db.new_connection(init=False)) as conn:
+    with closing(db.new_connection(initdb=False)) as conn:
         last_update, queue_contracts, accepted_contracts = queue.load(conn)
         done_1day = db.Contract.load_completed_after(conn = conn, cutoff = last_update - datetime.timedelta(days=1))
         done_7day = db.Contract.load_completed_after(conn = conn, cutoff = last_update - datetime.timedelta(days=7))

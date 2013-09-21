@@ -30,18 +30,33 @@ Prerequisites
 Setup
 -----
 
-The DB filename is currently hardcoded to 'redfrog.db'.
+Configuration is read from rfscrape.ini, which contains these sections:
 
-Other configuration is entirely via environment variables:
+### \[db\] section
 
- * EVE_CHARID: the character ID to use when authenticating to the Red Frog website; required.
- * EVE_CHARNAME: the character name to use when authenticating to the Red Frog website; required.
- * EVE_CORPID: the corporation ID for authentication; optional; defaults to the Red Frog Freight corporation ID
- * EVE_CORPNAME: the corporation name for authentication; optional; defaults to 'Red Frog Freight'
- * EVE_ALLIANCEID: the alliance ID for authentication; optional; defaults to the Red-Frog alliance ID
- * EVE_ALLIANCENAME: the alliance name for authentication; optional; defaults to 'Red-Frog'
- * EVE_SERVERIP: the server IP to present to the webserver; optional; defaults to 87.237.38.200:26000, the Tranquillity server IP at the time of writing.
- * S3_BUCKET: the S3 bucket name to upload to; optional; defaults to frog.randomly.org.
+This section controls the sqlite3 database.
+
+ * dbfile: the path to the sqlite3 database to use
+
+### \[rf\] section
+
+This section controls the headers presented to the Red Frog webserver.
+
+ * char.id: the character ID to use when authenticating to the Red Frog website
+ * char.name: the character name to use when authenticating to the Red Frog website
+ * corp.id: the corporation ID for authentication
+ * corp.name: the corporation name for authentication
+ * alliance.id: the alliance ID for authentication
+ * alliance.name: the alliance name for authentication
+ * serverip: the server IP to present to the webserver
+
+### \[s3\] section
+
+This section controls uploading of graphs to S3.
+
+ * bucket: the S3 bucket name to upload to
+
+A sample rfscrape.ini is provided with sensible defaults for all values except character info and S3 bucket name.
 
 Additionally, you will need to provide S3 authentication info in a form accepted by boto (see [this article][2] for more details).
 If you happen to be running on an EC2 instance with an IAM role configured, boto should magically autodiscover that.

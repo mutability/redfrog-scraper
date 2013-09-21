@@ -26,7 +26,7 @@ def show(last_update, queue_contracts, accepted_contracts):
 
 if __name__ == '__main__':
     from contextlib import closing
-    with closing(db.new_connection(init=False)) as conn:
+    with closing(db.new_connection(initdb=False)) as conn:
         last_update, queue_contracts, accepted_contracts = load(conn)
 
     show(last_update, queue_contracts, accepted_contracts)

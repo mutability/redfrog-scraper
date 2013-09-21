@@ -202,11 +202,21 @@ def set_last_update(conn, last_update):
     conn.cursor().execute("DELETE FROM lastupdated")
     conn.cursor().execute("INSERT INTO lastupdated(last_update) VALUES (:last_update)", {"last_update": last_update})
 
-def new_connection(dbfile='redfrog.db', init=True):
-    conn = sqlite3.connect(dbfile, detect_types=sqlite3.PARSE_DECLTYPES)
+_dbfile = None
+def init():
+    global _dbfile
+    if _dbfile is None:
+        import ConfigParser
+        parser = ConfigParser.ConfigParser()
+        parser.read('rfscrape.ini')
+        _dbfile = parser.get('db','dbfile')
+
+def new_connection(initdb=True):
+    init()
+    conn = sqlite3.connect(_dbfile, detect_types=sqlite3.PARSE_DECLTYPES)
     conn.row_factory = sqlite3.Row
 
-    if init:
+    if initdb:
         c = conn.cursor()
         c.execute('''
 CREATE TABLE IF NOT EXISTS contracts (

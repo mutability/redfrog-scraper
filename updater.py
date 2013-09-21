@@ -169,7 +169,11 @@ def regenerate_graphs(conn):
 
 def run_indefinitely():
     log("Starting up..")
-    rfweb.init() # provoke errors early
+
+    # provoke errors early
+    db.init()
+    rfweb.init()
+    upload.init()
 
     while True:
         delay = run_one_cycle() + datetime.timedelta(seconds = random.normalvariate(mu=0.0, sigma=15.0))
