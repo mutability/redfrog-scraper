@@ -22,10 +22,10 @@ This code currently runs on an EC2 instance and [uploads the graphs here][3]
 Prerequisites
 -------------
 
-Python 2.7
-python-boto
-A character that belongs to Red Frog Freight for authentication
-An Amazon S3 bucket that you have permissions to upload to
+ * Python 2.7
+ * python-boto
+ * A character that belongs to Red Frog Freight for authentication
+ * An Amazon S3 bucket that you have permissions to upload to
 
 Setup
 -----
@@ -69,6 +69,7 @@ It also writes the following files:
  * log/tracker-latest.html: a copy of the last downloaded copy of the contract tracker page
  * log/ncf-missing-TIMESTAMP.html: a copy of any downloaded NCF page where the number of parsed contracts does not match the claimed number of contracts in the queue; useful for after-the-fact diagnosing of parse problems.
  * log/tracker-missing-TIMESTAMP.html: a copy of any downloaded contract tracker page where the number of parsed contracts does not match the claimed number of pending contracts; useful for after-the-fact diagnosing of parse problems.
+ * graph/*.png: timestamped copies of the graphs as they are generated.
 
 [1]: http://red-frog.org/                           "Red Frog Freight"
 [2]: https://aws.amazon.com/articles/Amazon-S3/3998 "Getting Started with AWS and Python"
