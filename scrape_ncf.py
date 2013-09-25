@@ -15,9 +15,6 @@ _re_contract_line = re.compile(
     r'<td><span [^>]*>(?P<collateral>(?:\d+,)*\d+(?:\.\d+)?)(?P<collateralunit> Thousand| Million| Billion|) isk.*\n', # collateral
     re.MULTILINE)
 
-def int_or_null(s):
-    return None if (s is None) else int(s)
-
 def scrape_ncf(override=None, write_copy=None, write_error=None):
     if override: source = open(override,'r')
     else: source = rfweb.urlopen('http://www.red-frog.org/nearest.php')
@@ -35,7 +32,7 @@ def scrape_ncf(override=None, write_copy=None, write_error=None):
             contract = db.Contract(contract_id = int(row.group('contractid')),
                                    from_sys = row.group('fromsys'),
                                    to_sys = row.group('tosys'),
-                                   jumps = int_or_null(row.group('jumps')),
+                                   jumps = scrape.int_or_none(row.group('jumps')),
                                    volume = int(row.group('volume').replace(',','')),
                                    reward = scrape.convert_isk(row.group('reward'), row.group('rewardunit')),
                                    star = (row.group('star') is not None),
@@ -45,7 +42,8 @@ def scrape_ncf(override=None, write_copy=None, write_error=None):
                                    created_min = server_time - scrape.age_to_delta_high(row.group('age')),
                                    created_max = server_time - scrape.age_to_delta_low(row.group('age')),
                                    accepted = None,
-                                   contractor = None)
+                                   contractor = None,
+                                   contractor_id = None)
             #print contract
             contracts.append(contract)
 

@@ -32,7 +32,7 @@ def scrape_tracker(override=None, write_copy=None, write_error=None):
         contracts = []
         for row in _re_contract_line.finditer(contents):
             contractor = row.group('contractor')
-            if contractor == '': contractor = '#' + row.group('charid')
+            if contractor == '': contractor = None
 
             contract = db.Contract(contract_id = int(row.group('contractid')),
                                    from_sys = row.group('fromsys'),
@@ -54,7 +54,8 @@ def scrape_tracker(override=None, write_copy=None, write_error=None):
                                                                 second = 0,
                                                                 microsecond = 0,
                                                                 tzinfo = None),
-                                   contractor = contractor)
+                                   contractor = contractor,
+                                   contractor_id = scrape.int_or_none(row.group('charid')))
             #print contract
             contracts.append(contract)
 

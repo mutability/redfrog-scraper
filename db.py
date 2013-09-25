@@ -13,7 +13,7 @@ def _merge(a,b,f=_mergeidentical):
 class Contract:
     IN_QUEUE, IN_PROGRESS, DONE, GONE = ('IN_QUEUE', 'IN_PROGRESS', 'DONE', 'GONE')
 
-    def __init__(self, contract_id, from_sys, to_sys, jumps, volume, collateral, reward, star, state, last_seen, created_min, created_max, accepted, contractor):
+    def __init__(self, contract_id, from_sys, to_sys, jumps, volume, collateral, reward, star, state, last_seen, created_min, created_max, accepted, contractor, contractor_id):
         self.contract_id = contract_id
         self.from_sys = from_sys
         self.to_sys = to_sys
@@ -28,6 +28,7 @@ class Contract:
         self.created_max = created_max
         self.accepted = accepted
         self.contractor = contractor
+        self.contractor_id = contractor_id
 
     @staticmethod
     def _mergestates(a,b):
@@ -57,7 +58,8 @@ class Contract:
                         created_min = _merge(c1.created_min, c2.created_min, max),
                         created_max = _merge(c1.created_max, c2.created_max, min),
                         accepted = _merge(c1.accepted, c2.accepted),
-                        contractor = _merge(c1.contractor, c2.contractor))
+                        contractor = _merge(c1.contractor, c2.contractor),
+                        contractor_id = _merge(c1.contractor_id, c2.contractor_id))
         
     @staticmethod
     def from_row(row):
@@ -74,7 +76,8 @@ class Contract:
                         created_min = row['created_min'],
                         created_max = row['created_max'],
                         accepted = row['accepted'],
-                        contractor = row['contractor'])
+                        contractor = row['contractor'],
+                        contractor_id = row['contractor_id'])
 
     @staticmethod
     def load(conn, contract_id):
@@ -102,13 +105,13 @@ class Contract:
         
     def insert_row(self, conn):
         conn.cursor().execute('''
-INSERT INTO contracts (contract_id,from_sys,to_sys,jumps,volume,collateral,reward,star,state,last_seen,created_min,created_max,accepted,contractor)
-VALUES (:contract_id, :from_sys, :to_sys, :jumps, :volume, :collateral, :reward, :star, :state, :last_seen, :created_min, :created_max, :accepted, :contractor)''', self.__dict__)
+INSERT INTO contracts (contract_id,from_sys,to_sys,jumps,volume,collateral,reward,star,state,last_seen,created_min,created_max,accepted,contractor,contractor_id)
+VALUES (:contract_id, :from_sys, :to_sys, :jumps, :volume, :collateral, :reward, :star, :state, :last_seen, :created_min, :created_max, :accepted, :contractor, :contractor_id)''', self.__dict__)
 
     def update_row(self, conn):
         conn.cursor().execute('''
 UPDATE contracts
-SET from_sys = :from_sys, to_sys = :to_sys, jumps = :jumps, volume = :volume, collateral = :collateral, reward = :reward, star = :star, state = :state, last_seen = :last_seen, created_min = :created_min, created_max = :created_max, accepted = :accepted, contractor = :contractor
+SET from_sys = :from_sys, to_sys = :to_sys, jumps = :jumps, volume = :volume, collateral = :collateral, reward = :reward, star = :star, state = :state, last_seen = :last_seen, created_min = :created_min, created_max = :created_max, accepted = :accepted, contractor = :contractor, contractor_id = :contractor_id
 WHERE contract_id = :contract_id''', self.__dict__)        
     
 
@@ -164,6 +167,8 @@ WHERE contract_id = :contract_id''', self.__dict__)
 
         if self.contractor is not None:
             contractor = self.contractor
+        elif self.contractor_id is not None:
+            contractor = '#' + str(self.contractor_id)
         else:
             contractor = ''
 
@@ -234,7 +239,8 @@ CREATE TABLE IF NOT EXISTS contracts (
   created_min timestamp NULL,
   created_max timestamp NULL,
   accepted    timestamp NULL,
-  contractor  TEXT      NULL
+  contractor  TEXT      NULL,
+  contractor_id INTEGER NULL
 )
 ''')  
 

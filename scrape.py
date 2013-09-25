@@ -1,5 +1,8 @@
 import urllib2, re, datetime
 
+def int_or_none(s):
+    return None if (s is None) else int(s)
+
 def unit_multiplier(s):
     s1 = s.strip().lower()
     if s1 == 'billion': return 1000000000.0
