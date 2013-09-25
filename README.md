@@ -24,6 +24,7 @@ Prerequisites
 
  * Python 2.7
  * python-boto
+ * R
  * A character that belongs to Red Frog Freight for authentication
  * An Amazon S3 bucket that you have permissions to upload to
 
