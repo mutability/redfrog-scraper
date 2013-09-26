@@ -25,8 +25,8 @@ with r_subprocess() as r:
 
 def make_queue_graph(last_update, queue_contracts, accepted_contracts, filename, scale=3600):
     with closing(tempfile.NamedTemporaryFile()) as inqueue_file, closing(tempfile.NamedTemporaryFile()) as inprogress_file, r_subprocess() as r:
-        queue_valid = filter(lambda x: x.created_min is not None, queue_contracts)
-        accepted_valid = filter(lambda x: x.created_min is not None, accepted_contracts)
+        queue_valid = filter(lambda x: x.created_min is not None and x.created_min < last_update, queue_contracts)
+        accepted_valid = filter(lambda x: x.created_min is not None and x.created_min < last_update, accepted_contracts)
 
         print >>inqueue_file, 'contractid,age'
         for contract in queue_valid:
