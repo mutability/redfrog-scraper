@@ -141,7 +141,7 @@ def regenerate_graphs(conn):
         log("Uploading 15-min queue graph")
         upload.upload(f=queue_15mins, key_name='queue15.png')
     except:
-        log("Exception generating 60-min graph (ignored)")
+        log("Exception generating 15-min graph (ignored)")
         traceback.print_exc()
     
     try:        
