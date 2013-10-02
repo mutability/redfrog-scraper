@@ -176,7 +176,7 @@ def regenerate_graphs(conn):
         log("Regenerating 7-day queue history graph")
         history_7day = last_update.strftime('graphs/queue_history_7day_%Y%m%d%H%M%S.png')
         history = db.load_queue_history(conn = conn, first_update = last_update - datetime.timedelta(days=7), last_update = last_update)
-        graph.make_history_graph(queue_history = history, filename=history_7day, title="Red Frog delivery times - last week")
+        graph.make_history_graph(queue_history = history, filename=history_7day, title="Red Frog queue size - last week")
         log("Uploading 7-day queue history graph")
         upload.upload(f=history_7day, key_name='queue_history_7day.png')
     except:
