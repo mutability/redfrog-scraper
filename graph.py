@@ -143,14 +143,77 @@ axis(1,
      tick=TRUE)
 '''.format(**locals())
 
+
+def make_history_graph(queue_history, filename, title):    
+    last_update = max([x[0] for x in queue_history])
+
+    with closing(tempfile.NamedTemporaryFile()) as history_file, r_subprocess() as r:
+        print >>history_file, 'time,iq24,iq48,iq72,ip24,ip48,ip72'    
+        for row in queue_history:
+            print >>history_file, '{0},{1},{2},{3},{4},{5},{6}'.format(*row)
+
+        history_file.flush()
+        
+        print >>r, '''
+d <- read.csv("{history_file.name}", header=TRUE, colClasses=c("POSIXct","numeric","numeric","numeric","numeric","numeric","numeric"))
+
+ymax <- max(d$iq24 + d$iq48 + d$iq72 + d$ip24 + d$ip48 + d$ip72) * 1.20
+
+# with antialias=none, this is very sensitive to res vs. lwd - be careful
+png(filename="{filename}", width=800, height=400, antialias="none", res=96)
+par(cex=0.75, lwd=1, xpd=TRUE)
+plot(x=d$time,
+     y=d$iq24 + d$iq48 + d$iq72 + d$ip24 + d$ip48 + d$ip72,
+     type="h",
+     col="#FF0000",
+     xlab="date",
+     ylab="number of contracts",
+     ylim=c(0,ymax),
+     main="{title}",
+     sub="last updated {last_update} GMT",
+     frame.plot=FALSE)
+lines(x=d$time,
+      y=d$iq24 + d$iq48 + d$ip24 + d$ip48 + d$ip72,
+      type="h",
+      col="#D0D000")
+lines(x=d$time,
+      y=d$iq24 + d$ip24 + d$ip48 + d$ip72,
+      type="h",
+      col="#00E000")
+lines(x=d$time,
+      y=d$ip24 + d$ip48 + d$ip72,
+      type="h",
+      col="#800000")
+lines(x=d$time,
+      y=d$ip24 + d$ip48,
+      type="h",
+      col="#606000")
+lines(x=d$time,
+      y=d$ip24,
+      type="h",
+      col="#006000")
+legend("topright",
+       legend=c('in transit (<24h)', 
+                'in queue (<24h)',
+                'in transit (24-48h)',
+                'in queue (24-48h)',
+                'in transit (>48h)',
+                'in queue (>48h)'),
+       ncol=3,
+       col=c("#006000", "#00E000", "#606000", "#D0D000", "#800000", "#FF0000"),
+       lty=1)
+'''.format(**locals())
+
 if __name__ == '__main__':
     import queue, db
     with closing(db.new_connection(initdb=False)) as conn:
         last_update, queue_contracts, accepted_contracts = queue.load(conn)
         done_1day = db.Contract.load_completed_after(conn = conn, cutoff = last_update - datetime.timedelta(days=1))
         done_7day = db.Contract.load_completed_after(conn = conn, cutoff = last_update - datetime.timedelta(days=7))
+        history = db.load_queue_history(conn = conn, first_update = last_update - datetime.timedelta(days=7), last_update = last_update)
 
     make_queue_graph(last_update, queue_contracts, accepted_contracts, scale=3600, filename="queue_3600.png")
     make_queue_graph(last_update, queue_contracts, accepted_contracts, scale=900, filename="queue_900.png")
     make_delivery_graph(last_update, done_1day, scale=3600, filename="delivery_1day.png", title="Red Frog delivery times - last day")
     make_delivery_graph(last_update, done_7day, scale=3600, filename="delivery_7day.png", title="Red Frog delivery times - last week")
+    make_history_graph(history, filename="queue_history_7day.png", title="Red Frog queue size - last week")

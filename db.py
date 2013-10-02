@@ -199,6 +199,20 @@ def add_update_info(conn, update_time, queue_count, in_progress_count):
 def add_queue_history(conn, update_time, q0to24, q24to48, q48to72, ip0to24, ip24to48, ip48to72):
     conn.cursor().execute("INSERT INTO queuehistory(update_time,queue_0_to_24,queue_24_to_48,queue_48_to_72,in_progress_0_to_24,in_progress_24_to_48,in_progress_48_to_72) VALUES (:update_time,:q0to24,:q24to48,:q48to72,:ip0to24,:ip24to48,:ip48to72)", locals())
 
+def load_queue_history(conn, first_update, last_update):
+    c = conn.cursor()
+    c.execute("SELECT update_time,queue_0_to_24,queue_24_to_48,queue_48_to_72,in_progress_0_to_24,in_progress_24_to_48,in_progress_48_to_72 FROM queuehistory WHERE update_time >= :first_update AND update_time <= :last_update", locals())
+    results = []
+    for row in c:
+        results.append( (row['update_time'],
+                         row['queue_0_to_24'],
+                         row['queue_24_to_48'],
+                         row['queue_48_to_72'],
+                         row['in_progress_0_to_24'],
+                         row['in_progress_24_to_48'],
+                         row['in_progress_48_to_72']) )
+    return results
+
 def get_last_update(conn):
     c = conn.cursor()
     c.execute("SELECT last_update FROM lastupdated")
