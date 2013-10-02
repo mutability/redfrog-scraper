@@ -196,6 +196,9 @@ def add_update_info(conn, update_time, queue_count, in_progress_count):
                            'queue_count': queue_count,
                            'in_progress_count': in_progress_count})
 
+def add_queue_history(conn, update_time, q0to24, q24to48, q48to72, ip0to24, ip24to48, ip48to72):
+    conn.cursor().execute("INSERT INTO queuehistory(update_time,queue_0_to_24,queue_24_to_48,queue_48_to_72,in_progress_0_to_24,in_progress_24_to_48,in_progress_48_to_72) VALUES (:update_time,:q0to24,:q24to48,:q48to72,:ip0to24,:ip24to48,:ip48to72)", locals())
+
 def get_last_update(conn):
     c = conn.cursor()
     c.execute("SELECT last_update FROM lastupdated")
@@ -257,6 +260,18 @@ CREATE TABLE IF NOT EXISTS serverupdates (
         c.execute('''
 CREATE TABLE IF NOT EXISTS lastupdated (
   last_update       timestamp NOT NULL
+)
+''')
+
+        c.execute('''
+CREATE TABLE IF NOT EXISTS queuehistory (
+  update_time       timestamp NOT NULL PRIMARY KEY,
+  queue_0_to_24     INTEGER NOT NULL,
+  queue_24_to_48    INTEGER NOT NULL,
+  queue_48_to_72    INTEGER NOT NULL,
+  in_progress_0_to_24     INTEGER NOT NULL,
+  in_progress_24_to_48    INTEGER NOT NULL,
+  in_progress_48_to_72    INTEGER NOT NULL
 )
 ''')
 

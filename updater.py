@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 
-import db, scrape_ncf, scrape_tracker, sys, datetime, traceback, time, random, queue, graph, upload, rfweb
+import db, scrape_ncf, scrape_tracker, sys, datetime, traceback, time, random, queue, graph, upload, rfweb, history
 
 def log(f, *args, **kwargs):
     print >>sys.stderr, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), f.format(*args, **kwargs)
@@ -57,7 +57,7 @@ def run_one_cycle():
             return datetime.timedelta(minutes=1)
 
         seen_contracts = set()
-        
+
         for contract in ncf_results['contracts'] + tracker_results['contracts']:
             try:
                 cid = contract.contract_id
@@ -96,8 +96,14 @@ def run_one_cycle():
                 log("Done: {contract}", **locals())
                 contract.update_row(conn = conn)
 
+        log("Updating queue history")
+        active_contracts = db.Contract.load_where(conn = conn, clause = "state IN (:inqueue,:inprogress)", inqueue = db.Contract.IN_QUEUE, inprogress = db.Contract.IN_PROGRESS)
+        history.update(conn = conn,
+                       active_contracts = active_contracts,
+                       update_time = last_update)
+
         db.add_update_info(conn,
-                           update_time = ncf_results['last_update'],
+                           update_time = last_update,
                            queue_count = len(ncf_results['contracts']), 
                            in_progress_count = len(tracker_results['contracts']))
         db.set_last_update(conn, ncf_results['last_update'])
