@@ -20,11 +20,9 @@ def update(conn, active_contracts, update_time):
 
 def regenerate(conn):
     # load server update history
-    update_times = []
     c = conn.cursor()
     c.execute("SELECT update_time FROM serverupdates")
-    for row in c:
-        update_times.append(row['update_time'])
+    update_times = [row['update_time'] for row in c]
     update_times.sort()
 
     # load contract history
