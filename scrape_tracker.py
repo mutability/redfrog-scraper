@@ -28,6 +28,12 @@ def scrape_tracker(override=None, write_copy=None, write_error=None):
                 out.write(contents)
 
         (server_time, last_update_time, next_update_time, processing, n_outstanding, n_inprogress, refresh) = scrape.scrape_update_info(contents)
+        if not server_time:
+            if write_error:
+                with closing(open(write_error,'w')) as out:
+                    out.write(contents)
+            raise RuntimeError("Couldn't scrape basic queue info")
+
 
         contracts = []
         for row in _re_contract_line.finditer(contents):
