@@ -7,7 +7,8 @@ _re_contract_line = re.compile(
     r'<tr id="tr(?P<rowid>\d+)">\n' + # table row ID
     r'.*\n' + # jumps to start
     r'.*\n' + # jumps from dest
-    r'^<td><a href="jumps.php/(?P<fromsys>[^,]+)?,(?P<tosys>[^/]+)?/show">.*onclick="CCPEVE.showContract\((?P<solarsystemid>\d+),\s*(?P<contractid>\d+)\).*\((?P<volume>\d+(?:,\d+)*) m<sup>3</sup>\).*\n' + # contract link, volume, comment
+    r'.*\n' + # waypoints
+    r'^<a href="jumps.php/(?P<fromsys>[^,]+)?,(?P<tosys>[^/]+)?/show">.*onclick="CCPEVE.showContract\((?P<solarsystemid>\d+),\s*(?P<contractid>\d+)\).*\((?P<volume>\d+(?:,\d+)*) m<sup>3</sup>\).*\n' + # contract link, volume, comment
     r'.*\n' +    # region from-to
     r'<td [^>]*>(?P<jumps>\d+)?</td>\n' + # jumps
     r'<td [^>]*>(?P<age>[^<]+)</td>\n' + # age
