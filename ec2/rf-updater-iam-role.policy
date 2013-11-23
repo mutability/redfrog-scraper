@@ -1,0 +1,24 @@
+
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:PutObjectAcl"
+      ],
+      "Sid": "Stmt1378853309000",
+      "Resource": [
+        "arn:aws:s3:::frog.randomly.org",
+        "arn:aws:s3:::frog.randomly.org/*"
+      ],
+      "Effect": "Allow"
+    },
+    {
+      "Action": ["ec2:DescribeVolumes","ec2:AttachVolume","ec2:DetachVolume"],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}

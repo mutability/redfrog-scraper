@@ -1,0 +1,79 @@
+EC2 setup notes (untested, from memory!)
+
+The basic structure is:
+
+ * A spot t1.micro instance that has an EBS-backed root filesystem. This instance might be destroyed/recreated by the
+   spot request mechanism, at which point the root EBS volume is also destroyed/recreated by EC2. So put no important
+   data on the root FS.
+ * A separate EBS volume that holds the scraper scripts and database
+ * User data script that, on the first boot of a new instance:
+   - sets up a fresh root FS by installing the necessary tools (python, boto, etc)
+   - locates and attaches to the EBS volume with the scraper scripts
+   - sets up the instance to start the scraper on reboot
+   - reboots
+
+
+1) create an EBS volume that will be used to hold the scraper scripts,
+   database, and output (graphs/logs)
+
+2) create a temporary EC2 instance. Attach the EBS volume to the EC2 instance, create a filesystem.
+
+3) copy the scraper scripts into the root of the new filesystem
+
+4) shut down the temporary instance
+
+5) tag the EBS volume with Purpose=RedFrogDisk; this is used by the user data script to locate the right volume to attach to
+
+6) create an IAM role that has:
+
+  ec2:DescribeVolumes
+  ec2:AttachVolume
+  ec2:DetachVolume
+  s3:ListBucket
+  s3:GetObject
+  s3:PutObject
+  s3:PutObjectAcl
+
+(see rf-updater-iam-role.policy for an example)
+
+7) create a spot request (ec2-request-spot-instances) with:
+   a suitable AMI ID (I used ami-0fc0d67b: amazon/amzn-ami-minimal-pv-2013.03.1.x86_64-ebs)
+   --user-data-file cloud-init-user-data.sh
+   --key (name of your EC2 keypair for authenticating to the instance)
+   --instance-count 1
+   --price (whatever you will tolerate - I use 0.02)
+   --type persistent
+   --subnet (your VPC subnet)
+   --instance-type t1.micro
+   --availability-zone (same zone as the EBS volume created above)
+   --iam-profile (ARN of the profile you created in 6)
+
+
+You should end up with something like this:
+
+$ ec2-describe-spot-instance-requests -H
+Type	SpotInstanceRequestID	Price	RequestType	ProductDescription	State	Created	ValidFrom	ValidUntil	LaunchGroup	AZGroup	InstanceID	ImageID	InstanceType	KeyName	GroupsAvailabilityZone	KernelID	RamdiskID	Monitored	SubnetID	LaunchedAvailabilityZone	IAMProfile
+SPOTINSTANCEREQUEST	sir-f17cb25c	0.020000	persistent	Linux/UNIX	active	2013-09-11T01:55:16+0100					i-90a3d2dc	ami-0fc0d67b	t1.micro	oliver-shiny-ec2	null	eu-west-1b			monitoring-disabled		eu-west-1b	arn:aws:iam::944047830779:instance-profile/rf-updater
+SPOTINSTANCESTATUS	fulfilled	2013-10-29T16:14:29+0000	Your Spot request is fulfilled.
+
+$ ec2-describe-instances -H
+Type	ReservationID	Owner	Groups	Platform
+RESERVATION	r-ec4c5fa3	944047830779	
+INSTANCE	i-90a3d2dc	ami-0fc0d67b	ec2-XXX-XXX-XXX-XXX.eu-west-1.compute.amazonaws.com	ip-XXX-XXX-XXX-XXX.eu-west-1.compute.internal	running	oliver-shiny-ec2	0		t1.micro	2013-10-29T16:14:28+0000	eu-west-1b	aki-71665e05			monitoring-disabled	XXX.XXX.XXX.XXX	XXX.XXX.XXX.XXX	vpc-067e206d	subnet-1b7e2070	ebs	spot	sir-f17cb25c	paravirtual	xen	de0d6af9-dd2e-4f49-85df-ac896419a7c5	sg-ad8368c2, sg-f283689d	default	false	arn:aws:iam::944047830779:instance-profile/rf-updater
+BLOCKDEVICE	/dev/sda1	vol-bc4f35e9	2013-10-29T16:14:31.000Z	true		
+BLOCKDEVICE	/dev/sdb1	vol-c1aacb94	2013-10-29T16:18:50.000Z	false		
+NIC	eni-fd734689	subnet-1b7e2070	vpc-067e206d	944047830779	in-use	XXX.XXX.XXX.XXX	ip-XXX-XXX-XXX-XXX.eu-west-1.compute.internal	true
+NICATTACHMENT	eni-attach-d333519f	0	attached	2013-10-29T16:14:28+0000	true
+NICASSOCIATION	XXX.XXX.XXX.XXX	amazon	172.31.37.90
+GROUP	sg-ad8368c2	home-ssh
+GROUP	sg-f283689d	default
+PRIVATEIPADDRESS	XXX.XXX.XXX.XXX
+
+$ ec2-describe-volumes -H
+VolumeId	Size	SnapshotId	AvailabilityZone	Status	CreateTime	VolumeType	Iops
+VOLUME	vol-c1aacb94	1		eu-west-1b	in-use	2013-09-10T22:41:53+0000	standard	
+ATTACHMENT	vol-c1aacb94	i-90a3d2dc	/dev/sdb1	attached	2013-10-29T16:18:50+0000	false
+TAG	volume	vol-c1aacb94	Purpose	RedFrogDisk
+TAG	volume	vol-c1aacb94	Name	Red Frog scraper - scripts and DB
+VOLUME	vol-bc4f35e9	2	snap-86d6ebad	eu-west-1b	in-use	2013-10-29T16:14:31+0000	standard	
+ATTACHMENT	vol-bc4f35e9	i-90a3d2dc	/dev/sda1	attached	2013-10-29T16:14:31+0000	true
